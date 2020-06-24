@@ -9,7 +9,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-void print_header_members(struct btf_header *header) {
+void print_header_members(btf_header *header) {
     printf("btf_header:\n");
     printf("\tmagic %x, version %u, flags %u, hdr_len %u\n", (*header).magic, (*header).version, (*header).flags, (*header).hdr_len);
     printf("\ttype_off %u, type_len %u \n", (*header).type_off, (*header).type_len);
@@ -41,25 +41,25 @@ void read_members(int vlen, btf_member **member_list, char *after_type, int kfla
     return;
 }
 
-void read_enums(int vlen, struct btf_enum **kind_enum_list, char *after_type) {
+void read_enums(int vlen, btf_enum **kind_enum_list, char *after_type) {
     for (int i = 0; i < vlen; i++) {
-        kind_enum_list[i] = reinterpret_cast<struct btf_enum *>(after_type + i * 32 * 2);
+        kind_enum_list[i] = reinterpret_cast<btf_enum *>(after_type + i * 32 * 2);
         printf("\tname_off %u, val %d\n", (*kind_enum_list[i]).name_off, (*kind_enum_list[i]).val);
     }
     return;
 }
 
-void read_params(int vlen, struct btf_param **func_param_list, char *after_type) {
+void read_params(int vlen, btf_param **func_param_list, char *after_type) {
     for (int i = 0; i < vlen; i++) {
-        func_param_list[i] = reinterpret_cast<struct btf_param *>(after_type + i * 32 * 2);
+        func_param_list[i] = reinterpret_cast<btf_param *>(after_type + i * 32 * 2);
         printf("\tname_off %u, type %u\n", (*func_param_list[i]).name_off, (*func_param_list[i]).type);
     }
     return;
 }
 
-void read_datasec(int vlen, struct btf_var_secinfo **secinfo_list, char *after_type) {
+void read_datasec(int vlen, btf_var_secinfo **secinfo_list, char *after_type) {
     for (int i = 0; i < vlen; i++) {
-        secinfo_list[i] = reinterpret_cast<struct btf_var_secinfo *>(after_type + i * 32 * 3);
+        secinfo_list[i] = reinterpret_cast<btf_var_secinfo *>(after_type + i * 32 * 3);
         printf("\ttype %u, offset %u, size %u\n", (*secinfo_list[i]).type, (*secinfo_list[i]).offset, (*secinfo_list[i]).size);
     }
     return;
@@ -80,11 +80,11 @@ int main() {
     int fclosed = close(fd);
     assert(fclosed == 0);
 
-    struct btf_header *header = reinterpret_cast<struct btf_header *>(start);
+    btf_header *header = reinterpret_cast<btf_header *>(start);
     assert((*header).magic == 60319); // 0xEB9f
     print_header_members(header);
 
-    struct btf_type *type = reinterpret_cast<struct btf_type *>((char *)start + (*header).hdr_len + (*header).type_off);
+    btf_type *type = reinterpret_cast<btf_type *>((char *)start + (*header).hdr_len + (*header).type_off);
     __u32 kind = BTF_INFO_KIND((*type).info);
     __u32 vlen = BTF_INFO_VLEN((*type).info);
     __u32 kflag = BTF_INFO_KFLAG((*type).info);
@@ -92,12 +92,12 @@ int main() {
     printf("\nbtf_type:\n\tname_off %u, kind %u, vlen %u, kflag %u\n", (*type).name_off, kind, vlen, kflag);
 
     __u32 *kind_int_val;
-    struct btf_array *kind_arr;
-    struct btf_var *kind_var;
-    struct btf_enum *kind_enum_list[vlen];
-    struct btf_member *member_list[vlen];
-    struct btf_param *func_param_list[vlen];
-    struct btf_var_secinfo *secinfo_list[vlen];
+    btf_array *kind_arr;
+    btf_var *kind_var;
+    btf_enum *kind_enum_list[vlen];
+    btf_member *member_list[vlen];
+    btf_param *func_param_list[vlen];
+    btf_var_secinfo *secinfo_list[vlen];
     char *after_type = (char *)start + (*header).hdr_len + (*header).type_off + 32 * 3;
     switch (kind) {
         case BTF_KIND_INT: {
