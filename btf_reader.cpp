@@ -100,7 +100,7 @@ int main() {
     assert(header->magic == 60319);  // 0xEB9f
     print_header_members(header);
 
-    btf_type *type_section = reinterpret_cast<btf_type *>((char *)start + header->hdr_len + header->type_off);
+    btf_type *type_section = reinterpret_cast<btf_type *>(reinterpret_cast<char *>(start) + header->hdr_len + header->type_off);
     __u32 kind = BTF_INFO_KIND(type_section->info);
     __u32 vlen = BTF_INFO_VLEN(type_section->info);
     __u32 kflag = BTF_INFO_KFLAG(type_section->info);
@@ -114,7 +114,7 @@ int main() {
     btf_member *member_list[vlen];
     btf_param *func_param_list[vlen];
     btf_var_secinfo *secinfo_list[vlen];
-    char *after_type = (char *)start + header->hdr_len + header->type_off + 32 * 3;
+    char *after_type = reinterpret_cast<char *>(start) + header->hdr_len + header->type_off + 32 * 3;
     switch (kind) {
         case BTF_KIND_INT: {
             kind_int_val = reinterpret_cast<__u32 *>(after_type);
