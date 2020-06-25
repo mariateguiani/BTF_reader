@@ -20,7 +20,6 @@ void print_header_members(btf_header *header) {
 void print_string_section(__u32 str_len, char *str_start) {
     printf("String section:\n");
     for (int i = 0; i < str_len; i++) {
-        char *curr = str_start + i;
         if (*(str_start + i) == '\0') {
             i++;
             printf("\t%s\n", str_start + i);
