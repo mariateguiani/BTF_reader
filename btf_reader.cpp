@@ -83,6 +83,9 @@ void print_header_members(btf_header *header) {
 }
 
 void read_members(int vlen, int kflag) {
+    assert(kflag == 0 || kflag == 1);
+    assert(vlen > 0);
+
     for (int i = 0; i < vlen; i++) {
         structures.member_list.push_back(reinterpret_cast<btf_member *>(
             structures.after_type_section + i * 32 * 3));
@@ -106,6 +109,8 @@ void read_members(int vlen, int kflag) {
 }
 
 void read_enums(int vlen) {
+    assert(vlen > 0);
+
     for (int i = 0; i < vlen; i++) {
         structures.kind_enum_list.push_back(reinterpret_cast<btf_enum *>(
             structures.after_type_section + i * 32 * 2));
@@ -116,6 +121,8 @@ void read_enums(int vlen) {
 }
 
 void read_params(int vlen) {
+    assert(vlen > 0);
+
     for (int i = 0; i < vlen; i++) {
         structures.func_param_list.push_back(reinterpret_cast<btf_param *>(
             structures.after_type_section + i * 32 * 2));
@@ -126,6 +133,8 @@ void read_params(int vlen) {
 }
 
 void read_datasec(int vlen) {
+    assert(vlen > 0);
+
     for (int i = 0; i < vlen; i++) {
         structures.secinfo_list.push_back(reinterpret_cast<btf_var_secinfo *>(
             structures.after_type_section + i * 32 * 3));
@@ -187,9 +196,10 @@ void analyse_type_section() {
             cout << "\tsize " << structures.type_section->size << "\n";
             break;
         }
-        // case BTF_KIND_FWD: {
-        //     break;
-        // }
+        case BTF_KIND_FWD: {
+            assert(kflag == 0 || kflag == 1);
+            break;
+        }
         case BTF_KIND_TYPEDEF: {
             cout << "BTF_KIND_TYPEDEF:\n\ttype "
                  << structures.type_section->type << "\n";
