@@ -15,7 +15,6 @@
 #include <asm-generic/int-ll64.h>
 #include <assert.h>
 #include <fcntl.h>
-#include <iostream>
 #include <libelf.h>
 #include <linux/btf.h>
 #include <stdio.h>
@@ -24,7 +23,11 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <iostream>
+#include <vector>
+
 using std::cout;
+using std::vector;
 
 void print_header_members(btf_header *header) {
     cout << "btf_header:\n";
@@ -45,38 +48,38 @@ void print_string_section(__u32 str_len, char *str_start) {
     return;
 }
 
-void read_members(int vlen, btf_member **member_list, char *after_type, int kflag) {
+void read_members(int vlen, vector<btf_member *> member_list, char *after_type, int kflag) {
     for (int i = 0; i < vlen; i++) {
-        member_list[i] = reinterpret_cast<btf_member *>(after_type + i * 32 * 3);
+        member_list.push_back(reinterpret_cast<btf_member *>(after_type + i * 32 * 3));
         if (kflag == 1) {
-            cout << "\tname off " << member_list[i]->name_off << ", type " << member_list[i]->type << ", bitfield size " << BTF_MEMBER_BITFIELD_SIZE(member_list[i]->offset) << ", bit offset " << BTF_MEMBER_BIT_OFFSET(member_list[i]->offset) << "\n";
+            cout << "\tname off " << member_list.back()->name_off << ", type " << member_list.back()->type << ", bitfield size " << BTF_MEMBER_BITFIELD_SIZE(member_list.back()->offset) << ", bit offset " << BTF_MEMBER_BIT_OFFSET(member_list.back()->offset) << "\n";
         } else {
-            cout << "\tname off " << member_list[i]->name_off << ", type " << member_list[i]->type << ", offset " << member_list[i]->offset << "\n";
+            cout << "\tname off " << member_list.back()->name_off << ", type " << member_list.back()->type << ", offset " << member_list.back()->offset << "\n";
         }
     }
     return;
 }
 
-void read_enums(int vlen, btf_enum **kind_enum_list, char *after_type) {
+void read_enums(int vlen, vector<btf_enum *> kind_enum_list, char *after_type) {
     for (int i = 0; i < vlen; i++) {
-        kind_enum_list[i] = reinterpret_cast<btf_enum *>(after_type + i * 32 * 2);
-        cout << "\tname_off " << kind_enum_list[i]->name_off << ", val " << kind_enum_list[i]->val << "\n";
+        kind_enum_list.push_back(reinterpret_cast<btf_enum *>(after_type + i * 32 * 2));
+        cout << "\tname_off " << kind_enum_list.back()->name_off << ", val " << kind_enum_list.back()->val << "\n";
     }
     return;
 }
 
-void read_params(int vlen, btf_param **func_param_list, char *after_type) {
+void read_params(int vlen, vector<btf_param *> func_param_list, char *after_type) {
     for (int i = 0; i < vlen; i++) {
-        func_param_list[i] = reinterpret_cast<btf_param *>(after_type + i * 32 * 2);
-        cout << "\tname_off " << func_param_list[i]->name_off << ", type " << func_param_list[i]->type << "\n";
+        func_param_list.push_back(reinterpret_cast<btf_param *>(after_type + i * 32 * 2));
+        cout << "\tname_off " << func_param_list.back()->name_off << ", type " << func_param_list.back()->type << "\n";
     }
     return;
 }
 
-void read_datasec(int vlen, btf_var_secinfo **secinfo_list, char *after_type) {
+void read_datasec(int vlen, vector<btf_var_secinfo *> secinfo_list, char *after_type) {
     for (int i = 0; i < vlen; i++) {
-        secinfo_list[i] = reinterpret_cast<btf_var_secinfo *>(after_type + i * 32 * 3);
-        cout << "\ttype " << secinfo_list[i]->type << ", offset " << secinfo_list[i]->offset << ", size " << secinfo_list[i]->size << "\n";
+        secinfo_list.push_back(reinterpret_cast<btf_var_secinfo *>(after_type + i * 32 * 3));
+        cout << "\ttype " << secinfo_list.back()->type << ", offset " << secinfo_list.back()->offset << ", size " << secinfo_list.back()->size << "\n";
     }
     return;
 }
@@ -110,10 +113,10 @@ int main() {
     __u32 *kind_int_val;
     btf_array *kind_arr;
     btf_var *kind_var;
-    btf_enum *kind_enum_list[vlen];
-    btf_member *member_list[vlen];
-    btf_param *func_param_list[vlen];
-    btf_var_secinfo *secinfo_list[vlen];
+    vector<btf_enum *> kind_enum_list;
+    vector<btf_member *> member_list;
+    vector<btf_param *> func_param_list;
+    vector<btf_var_secinfo *> secinfo_list;
     char *after_type = reinterpret_cast<char *>(start) + header->hdr_len + header->type_off + 32 * 3;
     switch (kind) {
         case BTF_KIND_INT: {
