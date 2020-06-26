@@ -31,23 +31,23 @@ using std::vector;
 
 struct btf_file {
     const char *file_name;
-    int fd;
-    size_t size;
-    void *start;
+    int         fd;
+    size_t      size;
+    void *      start;
 } bf;
 
 struct btf_structures {
     btf_header *header;
-    btf_type *type_section;
-    char *after_type_section;
-    char *str_start;
+    btf_type *  type_section;
+    char *      after_type_section;
+    char *      str_start;
 
-    __u32 *kind_int_val;
-    btf_array *kind_arr;
-    btf_var *kind_var;
-    vector<btf_enum *> kind_enum_list;
-    vector<btf_member *> member_list;
-    vector<btf_param *> func_param_list;
+    __u32 *                   kind_int_val;
+    btf_array *               kind_arr;
+    btf_var *                 kind_var;
+    vector<btf_enum *>        kind_enum_list;
+    vector<btf_member *>      member_list;
+    vector<btf_param *>       func_param_list;
     vector<btf_var_secinfo *> secinfo_list;
 } structures;
 
@@ -57,7 +57,7 @@ char *open_BTF() {
     assert(bf.fd >= 0);
 
     struct stat s;
-    int fstat_status = fstat(bf.fd, &s);
+    int         fstat_status = fstat(bf.fd, &s);
     assert(fstat_status >= 0);
     bf.size = s.st_size;
 
@@ -72,19 +72,34 @@ char *open_BTF() {
 
 void print_header_members(btf_header *header) {
     cout << "btf_header:\n";
-    cout << "\tmagic " << header->magic << ", version " << header->version << ", flags " << header->flags << ", hdr_len " << header->hdr_len << "\n";
-    cout << "\ttype_off " << header->type_off << ", type_len " << header->type_len << "\n";
-    cout << "\tstr_off " << header->str_off << ", str_len " << header->str_len << "\n";
+    cout << "\tmagic " << header->magic << ", version " << header->version
+         << ", flags " << header->flags << ", hdr_len " << header->hdr_len
+         << "\n";
+    cout << "\ttype_off " << header->type_off << ", type_len "
+         << header->type_len << "\n";
+    cout << "\tstr_off " << header->str_off << ", str_len " << header->str_len
+         << "\n";
     return;
 }
 
 void read_members(int vlen, int kflag) {
     for (int i = 0; i < vlen; i++) {
-        structures.member_list.push_back(reinterpret_cast<btf_member *>(structures.after_type_section + i * 32 * 3));
+        structures.member_list.push_back(reinterpret_cast<btf_member *>(
+            structures.after_type_section + i * 32 * 3));
         if (kflag == 1) {
-            cout << "\tname off " << structures.member_list.back()->name_off << ", type " << structures.member_list.back()->type << ", bitfield size " << BTF_MEMBER_BITFIELD_SIZE(structures.member_list.back()->offset) << ", bit offset " << BTF_MEMBER_BIT_OFFSET(structures.member_list.back()->offset) << "\n";
+            cout << "\tname off " << structures.member_list.back()->name_off
+                 << ", type " << structures.member_list.back()->type
+                 << ", bitfield size "
+                 << BTF_MEMBER_BITFIELD_SIZE(
+                        structures.member_list.back()->offset)
+                 << ", bit offset "
+                 << BTF_MEMBER_BIT_OFFSET(structures.member_list.back()->offset)
+                 << "\n";
         } else {
-            cout << "\tname off " << structures.member_list.back()->name_off << ", type " << structures.member_list.back()->type << ", offset " << structures.member_list.back()->offset << "\n";
+            cout << "\tname off " << structures.member_list.back()->name_off
+                 << ", type " << structures.member_list.back()->type
+                 << ", offset " << structures.member_list.back()->offset
+                 << "\n";
         }
     }
     return;
@@ -92,24 +107,31 @@ void read_members(int vlen, int kflag) {
 
 void read_enums(int vlen) {
     for (int i = 0; i < vlen; i++) {
-        structures.kind_enum_list.push_back(reinterpret_cast<btf_enum *>(structures.after_type_section + i * 32 * 2));
-        cout << "\tname_off " << structures.kind_enum_list.back()->name_off << ", val " << structures.kind_enum_list.back()->val << "\n";
+        structures.kind_enum_list.push_back(reinterpret_cast<btf_enum *>(
+            structures.after_type_section + i * 32 * 2));
+        cout << "\tname_off " << structures.kind_enum_list.back()->name_off
+             << ", val " << structures.kind_enum_list.back()->val << "\n";
     }
     return;
 }
 
 void read_params(int vlen) {
     for (int i = 0; i < vlen; i++) {
-        structures.func_param_list.push_back(reinterpret_cast<btf_param *>(structures.after_type_section + i * 32 * 2));
-        cout << "\tname_off " << structures.func_param_list.back()->name_off << ", type " << structures.func_param_list.back()->type << "\n";
+        structures.func_param_list.push_back(reinterpret_cast<btf_param *>(
+            structures.after_type_section + i * 32 * 2));
+        cout << "\tname_off " << structures.func_param_list.back()->name_off
+             << ", type " << structures.func_param_list.back()->type << "\n";
     }
     return;
 }
 
 void read_datasec(int vlen) {
     for (int i = 0; i < vlen; i++) {
-        structures.secinfo_list.push_back(reinterpret_cast<btf_var_secinfo *>(structures.after_type_section + i * 32 * 3));
-        cout << "\ttype " << structures.secinfo_list.back()->type << ", offset " << structures.secinfo_list.back()->offset << ", size " << structures.secinfo_list.back()->size << "\n";
+        structures.secinfo_list.push_back(reinterpret_cast<btf_var_secinfo *>(
+            structures.after_type_section + i * 32 * 3));
+        cout << "\ttype " << structures.secinfo_list.back()->type << ", offset "
+             << structures.secinfo_list.back()->offset << ", size "
+             << structures.secinfo_list.back()->size << "\n";
     }
     return;
 }
@@ -119,22 +141,32 @@ void analyse_type_section() {
     __u32 vlen = BTF_INFO_VLEN(structures.type_section->info);
     __u32 kflag = BTF_INFO_KFLAG(structures.type_section->info);
 
-    cout << "\nbtf_type:\n\tname_off " << structures.type_section->name_off << ", kind " << kind << ", vlen " << vlen << ", kflag " << kflag << "\n";
+    cout << "\nbtf_type:\n\tname_off " << structures.type_section->name_off
+         << ", kind " << kind << ", vlen " << vlen << ", kflag " << kflag
+         << "\n";
 
     switch (kind) {
         case BTF_KIND_INT: {
-            structures.kind_int_val = reinterpret_cast<__u32 *>(structures.after_type_section);
-            cout << "BTF_KIND_INT:\n\tint encoding " << BTF_INT_ENCODING(*structures.kind_int_val) << ", offset " << BTF_INT_OFFSET(*structures.kind_int_val) << ", bits " << BTF_INT_BITS(*structures.kind_int_val) << "\n";
+            structures.kind_int_val =
+                reinterpret_cast<__u32 *>(structures.after_type_section);
+            cout << "BTF_KIND_INT:\n\tint encoding "
+                 << BTF_INT_ENCODING(*structures.kind_int_val) << ", offset "
+                 << BTF_INT_OFFSET(*structures.kind_int_val) << ", bits "
+                 << BTF_INT_BITS(*structures.kind_int_val) << "\n";
             cout << "\tsize " << structures.type_section->size << "\n";
             break;
         }
         case BTF_KIND_PTR: {
-            cout << "BTF_KIND_PTR:\n\ttype " << structures.type_section->type << "\n";
+            cout << "BTF_KIND_PTR:\n\ttype " << structures.type_section->type
+                 << "\n";
             break;
         }
         case BTF_KIND_ARRAY: {
-            structures.kind_arr = reinterpret_cast<btf_array *>(structures.after_type_section);
-            cout << "BTF_KIND_ARRAY:\n\ttype " << structures.kind_arr->type << ", index type " << structures.kind_arr->index_type << ", num elems " << structures.kind_arr->nelems << "\n";
+            structures.kind_arr =
+                reinterpret_cast<btf_array *>(structures.after_type_section);
+            cout << "BTF_KIND_ARRAY:\n\ttype " << structures.kind_arr->type
+                 << ", index type " << structures.kind_arr->index_type
+                 << ", num elems " << structures.kind_arr->nelems << "\n";
             break;
         }
         case BTF_KIND_STRUCT: {
@@ -159,23 +191,28 @@ void analyse_type_section() {
         //     break;
         // }
         case BTF_KIND_TYPEDEF: {
-            cout << "BTF_KIND_TYPEDEF:\n\ttype " << structures.type_section->type << "\n";
+            cout << "BTF_KIND_TYPEDEF:\n\ttype "
+                 << structures.type_section->type << "\n";
             break;
         }
         case BTF_KIND_VOLATILE: {
-            cout << "BTF_KIND_VOLATILE:\n\ttype " << structures.type_section->type << "\n";
+            cout << "BTF_KIND_VOLATILE:\n\ttype "
+                 << structures.type_section->type << "\n";
             break;
         }
         case BTF_KIND_CONST: {
-            cout << "BTF_KIND_CONST:\n\ttype " << structures.type_section->type << "\n";
+            cout << "BTF_KIND_CONST:\n\ttype " << structures.type_section->type
+                 << "\n";
             break;
         }
         case BTF_KIND_RESTRICT: {
-            cout << "BTF_KIND_RESTRICT:\n\ttype " << structures.type_section->type << "\n";
+            cout << "BTF_KIND_RESTRICT:\n\ttype "
+                 << structures.type_section->type << "\n";
             break;
         }
         case BTF_KIND_FUNC: {
-            cout << "BTF_KIND_FUNC:\n\ttype " << structures.type_section->type << "\n";
+            cout << "BTF_KIND_FUNC:\n\ttype " << structures.type_section->type
+                 << "\n";
             break;
         }
         case BTF_KIND_FUNC_PROTO: {
@@ -185,7 +222,8 @@ void analyse_type_section() {
             break;
         }
         case BTF_KIND_VAR: {
-            structures.kind_var = reinterpret_cast<btf_var *>(structures.after_type_section);
+            structures.kind_var =
+                reinterpret_cast<btf_var *>(structures.after_type_section);
             cout << "\ttype " << structures.type_section->type << "\n";
             break;
         }
@@ -225,11 +263,14 @@ int main() {
     assert(structures.header->magic == 60319);  // 0xEB9F
     print_header_members(structures.header);
 
-    structures.type_section = reinterpret_cast<btf_type *>(start + structures.header->hdr_len + structures.header->type_off);
-    structures.after_type_section = start + structures.header->hdr_len + structures.header->type_off + 32 * 3;
+    structures.type_section = reinterpret_cast<btf_type *>(
+        start + structures.header->hdr_len + structures.header->type_off);
+    structures.after_type_section = start + structures.header->hdr_len
+                                    + structures.header->type_off + 32 * 3;
     analyse_type_section();
 
-    structures.str_start = start + structures.header->hdr_len + structures.header->str_off;
+    structures.str_start =
+        start + structures.header->hdr_len + structures.header->str_off;
     print_string_section();
 
     close_and_unmap();
