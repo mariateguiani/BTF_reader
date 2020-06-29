@@ -64,9 +64,6 @@ char *open_BTF() {
     bf.start = mmap(0, bf.size, PROT_READ, MAP_PRIVATE, bf.fd, 0);
     assert(bf.start != MAP_FAILED);
 
-    int fclosed = close(bf.fd);
-    assert(fclosed == 0);
-
     return reinterpret_cast<char *>(bf.start);
 }
 
@@ -262,6 +259,9 @@ void print_string_section() {
 }
 
 void close_and_unmap() {
+    int fclosed = close(bf.fd);
+    assert(fclosed == 0);
+
     int unmapped = munmap(bf.start, bf.size);
     assert(unmapped != -1);
 }
